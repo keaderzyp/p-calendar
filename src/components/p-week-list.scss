@@ -1,0 +1,11 @@
+$weekFontColor: #999;
+.p-week-list{
+	display: flex;
+	.p-week-list-item{
+		flex-grow: 1;
+		text-align: center;
+		font-size: 14px;
+		color: $weekFontColor;
+		padding: 10px 0px;
+	}
+}
