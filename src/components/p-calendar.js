@@ -7,6 +7,7 @@ import  'vant/lib/swipe-cell/index.css'
 import  'vant/lib/swipe-item/index.css'
 import PWeekList from './p-week-list'
 import PDateList from './p-date-list'
+import PDateMonthList from './p-date-month-list'
 import solarLunar from 'solarLunar';
 const PCalendar = {
 	name:'p-calendar',
@@ -64,6 +65,15 @@ const PCalendar = {
 			let d = new Date(year,month,0)
 			return d.getDate();
 		},
+		//获取当前选中的swipe
+		getActiveSwipe(index){
+			let monthObj = this.allMonthArr[index];
+			let activeObj = monthObj.data.filter(item => item.today||item.active)
+			this.$emit('change',{month:monthObj,activeDate:activeObj.length>0?activeObj[0]:this.activeDate})
+			this.$emit('activeChange',activeObj.length>0?activeObj[0]:this.activeDate)
+			this.activeDate = activeObj.length>0?activeObj[0]:this.activeDate
+		},
+		//初始化上月数据
 		initPreMonthDaysArr(year,month,monthDays,thisLastMonthArr){
 			let thisLastMonthFirstDay = thisLastMonthArr[0]
 			let lastMonthDays = this.getMonthDays(year,month-1);
@@ -82,6 +92,7 @@ const PCalendar = {
 			}
 			return arr;
 		},
+		//初始化本月数据
 		initthisLastMonthDaysArr(year,month,monthDays){
 			let arr = []
 			let now = new Date();
@@ -90,9 +101,18 @@ const PCalendar = {
 				let today,active
 				if(month == now.getMonth()+1){
 					if(now.getDate() == dateItem.cDay && now.getDay() == dateItem.nWeek){
-						this.activeDate = dateItem;
 						today = true;
 						active = true;
+						this.activeDate = {
+							w:dateItem.nWeek,
+							d:dateItem.cDay,
+							date:dateItem,
+							dayCn:dateItem.dayCn,
+							type:'this',
+							active,
+							today
+						};
+						
 					}else{
 						today = false;
 						active = false;
@@ -118,6 +138,7 @@ const PCalendar = {
 			}
 			return arr;
 		},
+		//初始化下月数据
 		initNextMonthDaysArr(year,month,monthDays,thisLastMonthArr,preMonthArr){
 			let needNextMonthDays = 42 - (thisLastMonthArr.length+preMonthArr.length);
 			let arr = []
@@ -135,6 +156,7 @@ const PCalendar = {
 			}
 			return arr;
 		},
+		//初始化年月日
 		initYearMonthDays(year,month){
 			year = year || new Date().getFullYear();
 			month = month || new Date().getMonth()+1;
@@ -150,6 +172,7 @@ const PCalendar = {
 				data:totalMonthDaysArr
 			}
 		},
+		//同步增量追加日期swipe
 		syncPushDate(index){
 			if(index == 0){
 				let m = this.allMonthArr[0].m;
@@ -191,11 +214,7 @@ const PCalendar = {
 		//根据类型渲染
 		switchRenderType(h){
 			let _this = this;
-			let headerObj = h(PWeekList,{
-				props:{
-					'base-weeks':this.baseWeeks
-				}
-			})
+			//当类型为列表活日期时
 			if(this.type == 'list' || this.type == 'date'){
 				return h(Swipe,{
 					props:{
@@ -207,19 +226,26 @@ const PCalendar = {
 					on:{
 						change(index){
 							// _this.activeIndex = index;
-							_this.syncPushDate(index)
+							_this.syncPushDate(index);
+							_this.getActiveSwipe(index);
 						}
 					}
 				},this.allMonthArr.map(item => {
 					return h(SwipeItem,{},
 						[
-							headerObj,h(PDateList,{
+							h(PWeekList,{
+								props:{
+									'base-weeks':this.baseWeeks
+								}
+							}),
+							h(PDateList,{
 								props:{
 									data:item.data,
 									month:item.m,
 									year:item.y
 								},
 								on:{
+									//活动日期变更触发
 									activeChange(res){
 										_this.$emit('activeChange',res)
 										_this.activeDate = res;
@@ -234,9 +260,55 @@ const PCalendar = {
 								}
 							})
 						])
-				}))
+					}
+				))
 			}else{
 				
+				return h('div',{
+					class:'p-month-list'
+				},[
+					h(PWeekList,{
+						props:{
+							'base-weeks':this.baseWeeks,
+							shadow:true,
+							activeDate:this.activeDate,
+							'show-title':true,
+						},
+						on:{
+							swipeToYearMonth(year,month){
+								_this.swipeToYearMonth(year,month)
+							}
+						}
+					}),
+					h(Swipe,{
+						props:{
+							'show-indicators':false,
+							loop:false,
+							'initial-swipe':this.activeIndex
+							
+						},
+						ref:'swiper',
+						on:{
+							change(index){
+								// _this.activeIndex = index;
+								_this.syncPushDate(index);
+								_this.getActiveSwipe(index);
+							}
+						}
+					},this.allMonthArr.map(item => {
+						return h(SwipeItem,{},
+							[
+								h(PDateMonthList,{
+									props:{
+										data:item.data,
+										month:item.m,
+										year:item.y
+									}
+								})
+							])
+						}
+					))
+				])
 			}
 		},
 		//滚动到指定年月

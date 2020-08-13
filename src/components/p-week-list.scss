@@ -1,11 +1,42 @@
 $weekFontColor: #999;
+$screenWidth:100;
+$cellCount:7;
 .p-week-list{
 	display: flex;
+	flex-wrap: wrap;
+	.title{
+		display: flex;
+		justify-items: center;
+		justify-content: center;
+		width: 100%;
+		text-align: center;
+		align-items: center;
+		font-size: 11px;
+		color: #222;
+		font-weight: bold;
+		padding: 10px 0px;
+		.this-month{
+			color:#409EFF;
+			border:0.5px solid #409EFF;
+			border-radius: 3px;
+			line-height: 11px;
+			font-size: 8px;
+			padding: 1px 3px;
+			margin-right: 4px;
+			background-color: rgb(236, 245, 255);
+		}
+	}
 	.p-week-list-item{
+		flex-grow: 0;
+		flex-shrink: 0;
+		width: #{$screenWidth/$cellCount}#{'%'};
 		flex-grow: 1;
 		text-align: center;
 		font-size: 14px;
 		color: $weekFontColor;
 		padding: 10px 0px;
 	}
+}
+.p-week-list.shadow{
+	box-shadow: 0px 5px 10px 0px rgba($color: #777, $alpha: 0.5);
 }

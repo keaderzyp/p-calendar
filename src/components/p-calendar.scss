@@ -1,5 +1,27 @@
 @import './p-week-list.scss';
 @import './p-date-list.scss';
+@import './p-date-month-list.scss';
 .p-calendar{
-	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+	display:flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	.van-swipe{
+		width: 100%;
+		.van-swipe__track{
+			width: 100%;
+		}
+	}
+	.p-month-list{
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		.van-swipe{
+			flex-grow: 1;
+			.p-date-month-list{
+				height: 100%;
+			}
+		}
+	}
 }
