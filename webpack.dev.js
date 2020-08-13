@@ -2,6 +2,7 @@ const { merge } = require('webpack-merge');
 const config = require('./webpack.base.js');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 module.exports = merge(config,{
 	mode:'development',
 	entry:{
@@ -21,6 +22,10 @@ module.exports = merge(config,{
 	},
 	module:{
 		rules:[
+			{
+				test:/\.vue$/,
+				loader:'vue-loader'
+			},
 			{
 				test:/\.scss$/,
 				use:[{
@@ -46,6 +51,7 @@ module.exports = merge(config,{
 		]
 	},
 	plugins:[
+		new VueLoaderPlugin(),
 		new HtmlWebpackPlugin({
 			template:path.resolve(__dirname,'public/index.html'),
 			filename:path.resolve(__dirname,'dist/index.html'),

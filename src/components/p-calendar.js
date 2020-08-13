@@ -1,15 +1,9 @@
 import './p-calendar.scss'
-import Swipe from 'vant/lib/swipe'
-import SwipeCell from 'vant/lib/swipe-cell'
-import SwipeItem from 'vant/lib/swipe-item'
-import  'vant/lib/swipe/index.css'
-import  'vant/lib/swipe-cell/index.css'
-import  'vant/lib/swipe-item/index.css'
 import PWeekList from './p-week-list'
 import PDateList from './p-date-list'
 import PDateMonthList from './p-date-month-list'
 import solarLunar from 'solarLunar';
-const PCalendar = {
+export const PCalendar = {
 	name:'p-calendar',
 	props:{
 		//type：日历展示形态，list（列表），date（日），months（月历）
@@ -216,7 +210,7 @@ const PCalendar = {
 			let _this = this;
 			//当类型为列表活日期时
 			if(this.type == 'list' || this.type == 'date'){
-				return h(Swipe,{
+				return h('van-swipe',{
 					props:{
 						'show-indicators':false,
 						loop:false,
@@ -231,7 +225,7 @@ const PCalendar = {
 						}
 					}
 				},this.allMonthArr.map(item => {
-					return h(SwipeItem,{},
+					return h('van-swipe-item',{},
 						[
 							h(PWeekList,{
 								props:{
@@ -280,7 +274,7 @@ const PCalendar = {
 							}
 						}
 					}),
-					h(Swipe,{
+					h('van-swipe',{
 						props:{
 							'show-indicators':false,
 							loop:false,
@@ -296,7 +290,7 @@ const PCalendar = {
 							}
 						}
 					},this.allMonthArr.map(item => {
-						return h(SwipeItem,{},
+						return h('van-swipe-item',{},
 							[
 								h(PDateMonthList,{
 									props:{
@@ -405,30 +399,5 @@ const PCalendar = {
 			// 	}
 			// },'点我去2022-03')
 		])
-	}
-}
-export default {
-	install(Vue){
-		function resize(fn,delay){
-			let first = true
-			let flag = true
-			return function(e){
-				if(!first){
-					if(flag){
-						setTimeout(function(){
-							fn&&fn(e)
-							flag = true
-						},delay)
-					}
-					flag = false
-				}
-				first = false;
-			}
-		}
-		window.addEventListener('resize',resize(function(e){
-			let html = document.querySelector('html');
-			html.style.fontSize = (window.innerWidth/375)+'px'
-		},100))
-		Vue.component(PCalendar.name,PCalendar)
 	}
 }

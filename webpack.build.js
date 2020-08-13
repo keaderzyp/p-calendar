@@ -5,9 +5,15 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 module.exports = merge(config,{
 	mode:'production',
 	entry:{
-		'p-calendar':path.resolve(__dirname,'src/components/p-calendar.js')
+		'p-calendar':path.resolve(__dirname,'src/components/p-calendar-export.js')
 	},
-	devtool:'source-map',
+	output:{
+		library: "p-calendar",
+		libraryTarget: "umd",
+		filename: "[name].min.js",
+		path:path.resolve(__dirname,'lib'),
+		umdNamedDefine:true
+	},
 	module:{
 		rules:[
 			{
@@ -35,13 +41,6 @@ module.exports = merge(config,{
 				}]
 			}
 		]
-	},
-	output:{
-		library: "p-calendar",
-		libraryTarget: "umd",
-		filename: "[name].min.js",
-		path:path.resolve(__dirname,'lib'),
-		umdNamedDefine:true
 	},
 	plugins:[
 		new MiniCssExtractPlugin({
