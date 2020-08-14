@@ -41,7 +41,7 @@ export default{
 					},item.d),
 					h('div',{
 						class:'dl'
-					},item.dayCn)
+					},item.date.dayCn == '初一'?item.date.monthCn:item.date.dayCn)
 				])
 			])
 		}))

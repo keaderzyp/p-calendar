@@ -50,7 +50,7 @@ export default{
 						},item.today?'今':item.d),
 						h('div',{
 							class:"p-date-list-item-date-cn"
-						},item.dayCn)
+						},item.date.dayCn == '初一'?item.date.monthCn:item.date.dayCn)
 					])
 				])
 			}),

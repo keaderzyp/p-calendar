@@ -1,6 +1,6 @@
 <template>
 	<div style="height: 100%;position: relative;padding-top: 20px;box-sizing: border-box;">
-		<div style="height: 20px;position: absolute;top: 0;left: 0;width: 100%;">
+		<div style="height: 20px;position: absolute;top: 0;left: 0;width: 100%;font-size: 14px;">
 			切换形态:
 			<input type="radio" name="a" @change="handleRadioChange('list')" >列表
 			<input type="radio" name="a" @change="handleRadioChange('date')" >日期
@@ -11,7 +11,8 @@
 			class="p-date-container"
 			:type="type"
 			@activeChange="handleActiveChange" 
-			@change="handleChange">
+			@change="handleChange"
+			ref="p">
 			
 		</p-calendar>
 	</div>
@@ -24,6 +25,11 @@
 			return {
 				type:'list'
 			}
+		},
+		mounted(){
+			// setTimeout(() => {
+			// 	this.$refs.p.swipeToYearMonth(2050,12)
+			// },1000)
 		},
 		methods:{
 			handleActiveChange(e){
