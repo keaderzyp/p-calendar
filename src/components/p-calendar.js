@@ -2,7 +2,123 @@ import './p-calendar.scss'
 import PWeekList from './p-week-list'
 import PDateList from './p-date-list'
 import PDateMonthList from './p-date-month-list'
+import PCollapseBar from './p-collapse-bar'
 import solarLunar from 'solarLunar';
+
+//渲染date｜list类型的数据
+const renderDateList = (h,_this) => {
+	return h('div',{
+		class:'p-date-list'
+	},[
+		h(PWeekList,{
+			props:{
+				'base-weeks':_this.baseWeeks
+			}
+		}),
+		h('van-swipe',{
+			props:{
+				'show-indicators':false,
+				loop:false,
+				'initial-swipe':_this.activeIndex
+			},
+			ref:'swiper',
+			on:{
+				change(index){
+					// _this.activeIndex = index;
+					_this.syncPushDate(index);
+					_this.getActiveSwipe(index);
+				}
+			}
+		},_this.allMonthArr.map(item => {
+			return h('van-swipe-item',{},
+				[
+					h(PDateList,{
+						props:{
+							data:item.data,
+							month:item.m,
+							year:item.y
+						},
+						on:{
+							//活动日期变更触发
+							activeChange(res){
+								_this.$emit('activeChange',res)
+								_this.activeDate = res;
+								item.data.forEach( dateItem => {
+									if(dateItem.d == res.d && dateItem.w == res.w){
+										dateItem.active = true;
+									}else{
+										dateItem.active = false
+									}
+								})
+							}
+						}
+					}),
+				])
+			}
+		)),
+		h(PCollapseBar,{
+			on:{
+				touchstart(){
+					console.log('start')
+				},
+				touchmove(){
+					console.log('move')
+				},
+				touchend(){
+					console.log('end')
+				}
+			}
+		})
+	])
+}
+//渲染type为month的数据
+const renderMonthList = (h,_this) => {
+	return h('div',{
+		class:'p-month-list'
+	},[
+		h(PWeekList,{
+			props:{
+				'base-weeks':_this.baseWeeks,
+				shadow:true,
+				activeDate:_this.activeDate,
+				'show-title':true,
+			},
+			on:{
+				swipeToYearMonth(year,month){
+					_this.swipeToYearMonth(year,month)
+				}
+			}
+		}),
+		h('van-swipe',{
+			props:{
+				'show-indicators':false,
+				loop:false,
+				'initial-swipe':_this.activeIndex
+				
+			},
+			ref:'swiper',
+			on:{
+				change(index){
+					// _this.activeIndex = index;
+					_this.syncPushDate(index);
+					_this.getActiveSwipe(index);
+				}
+			}
+		},_this.allMonthArr.map(item => {
+			return h('van-swipe-item',{},
+				[
+					h(PDateMonthList,{
+						props:{
+							data:item.data,
+							month:item.m,
+							year:item.y
+						}
+					})
+				])
+			}
+		))
+	])
+}
 export const PCalendar = {
 	name:'p-calendar',
 	props:{
@@ -210,99 +326,9 @@ export const PCalendar = {
 			let _this = this;
 			//当类型为列表活日期时
 			if(this.type == 'list' || this.type == 'date'){
-				return h('van-swipe',{
-					props:{
-						'show-indicators':false,
-						loop:false,
-						'initial-swipe':this.activeIndex
-					},
-					ref:'swiper',
-					on:{
-						change(index){
-							// _this.activeIndex = index;
-							_this.syncPushDate(index);
-							_this.getActiveSwipe(index);
-						}
-					}
-				},this.allMonthArr.map(item => {
-					return h('van-swipe-item',{},
-						[
-							h(PWeekList,{
-								props:{
-									'base-weeks':this.baseWeeks
-								}
-							}),
-							h(PDateList,{
-								props:{
-									data:item.data,
-									month:item.m,
-									year:item.y
-								},
-								on:{
-									//活动日期变更触发
-									activeChange(res){
-										_this.$emit('activeChange',res)
-										_this.activeDate = res;
-										item.data.forEach( dateItem => {
-											if(dateItem.d == res.d && dateItem.w == res.w){
-												dateItem.active = true;
-											}else{
-												dateItem.active = false
-											}
-										})
-									}
-								}
-							})
-						])
-					}
-				))
+				return renderDateList(h,_this)
 			}else{
-				
-				return h('div',{
-					class:'p-month-list'
-				},[
-					h(PWeekList,{
-						props:{
-							'base-weeks':this.baseWeeks,
-							shadow:true,
-							activeDate:this.activeDate,
-							'show-title':true,
-						},
-						on:{
-							swipeToYearMonth(year,month){
-								_this.swipeToYearMonth(year,month)
-							}
-						}
-					}),
-					h('van-swipe',{
-						props:{
-							'show-indicators':false,
-							loop:false,
-							'initial-swipe':this.activeIndex
-							
-						},
-						ref:'swiper',
-						on:{
-							change(index){
-								// _this.activeIndex = index;
-								_this.syncPushDate(index);
-								_this.getActiveSwipe(index);
-							}
-						}
-					},this.allMonthArr.map(item => {
-						return h('van-swipe-item',{},
-							[
-								h(PDateMonthList,{
-									props:{
-										data:item.data,
-										month:item.m,
-										year:item.y
-									}
-								})
-							])
-						}
-					))
-				])
+				return renderMonthList(h,_this)
 			}
 		},
 		//滚动到指定年月
@@ -390,14 +416,6 @@ export const PCalendar = {
 			class:'p-calendar'
 		},[
 			this.switchRenderType(h),
-			// h('button',{
-			// 	on:{
-			// 		click(){
-			// 			_this.swipeToYearMonth(2022,5)
-						
-			// 		}
-			// 	}
-			// },'点我去2022-03')
 		])
 	}
 }
