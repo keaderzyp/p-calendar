@@ -1,5 +1,14 @@
 export default {
 	name:'p-collapse-bar',
+	props:{
+		collapse:{
+			required:false,
+			type:Boolean,
+			default(){
+				return false
+			}
+		}
+	},
 	render(h){
 		let _this = this;
 		return h('div',{
@@ -15,6 +24,6 @@ export default {
 					_this.$emit('touchend',e)
 				},
 			}
-		},'up')
+		},this.collapse?'down':'up')
 	}
 }

@@ -22,6 +22,7 @@ PCalendar.install = Vue => {
 	}
 	window.addEventListener('resize',resize(function(e){
 		let html = document.querySelector('html');
+		console.log(window.innerWidth)
 		html.style.fontSize = (window.innerWidth/375)+'px'
 	},100))
 	Vue.component(PCalendar.name,PCalendar)

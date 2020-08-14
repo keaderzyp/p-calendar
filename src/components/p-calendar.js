@@ -5,10 +5,16 @@ import PDateMonthList from './p-date-month-list'
 import PCollapseBar from './p-collapse-bar'
 import solarLunar from 'solarLunar';
 
-//渲染date｜list类型的数据
+//渲染type为date｜list类型的数据
 const renderDateList = (h,_this) => {
+	let touch = false;
+	let minHeight = window.innerWidth/375*40;
+	let maxHeight = window.innerWidth/375*240;
+	let lastHeight = 0
+	let upDown = 'down'
+	let moved = false
 	return h('div',{
-		class:'p-date-list'
+		class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
 	},[
 		h(PWeekList,{
 			props:{
@@ -57,15 +63,49 @@ const renderDateList = (h,_this) => {
 			}
 		)),
 		h(PCollapseBar,{
+			props:{
+				collapse:_this.renderCollapse
+			},
 			on:{
-				touchstart(){
-					console.log('start')
+				touchstart(e){
+					e.preventDefault()
+					let swiper = _this.$refs.swiper;
+					swiper.$el.style.transition = 'none'
+					touch = true;
 				},
-				touchmove(){
-					console.log('move')
+				touchmove(e){
+					if(touch){
+						moved = true
+						let swiper = _this.$refs.swiper;
+						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop - 20)
+						if(e.changedTouches[0].pageY >lastHeight){
+							upDown = 'down'
+						}else{
+							upDown = 'up'
+						}
+						swiper.$el.style.height = collapseHeight + 'px'
+						if(collapseHeight<=minHeight ){
+							swiper.$el.style.height = minHeight+'px'
+						}else if (collapseHeight >=maxHeight){
+							swiper.$el.style.height = maxHeight+'px'
+						}
+						lastHeight = e.changedTouches[0].pageY
+					}
 				},
 				touchend(){
-					console.log('end')
+					let swiper = _this.$refs.swiper;
+					swiper.$el.style.transition = '.5s'
+					if(moved){
+						if(upDown == 'up'){
+							_this.renderCollapse = true
+						}else{
+							_this.renderCollapse = false
+						}
+					}else{
+						_this.renderCollapse = !_this.renderCollapse
+					}
+					touch = false
+					moved = false
 				}
 			}
 		})
@@ -151,12 +191,24 @@ export const PCalendar = {
 			],
 			activeIndex:5,
 			allMonthArr:[],
-			activeDate:{}
+			activeDate:{},
+			renderCollapse:false
+		}
+	},
+	watch:{
+		collapse(v){
+			this.renderCollapse = v
+		},
+		renderCollapse(v){
+			let swiper = this.$refs.swiper;
+			let height = (window.innerWidth/375*(v?40:240)) + 'px';
+			swiper.$el.style.height = height
 		}
 	},
 	mounted(){
 		let html = document.querySelector('html');
 		html.style.fontSize = (window.innerWidth/375)+'px'
+		
 	},
 	created(){
 		let now = new Date();

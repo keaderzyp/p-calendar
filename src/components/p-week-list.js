@@ -78,9 +78,9 @@ export default{
 							_this.$emit('swipeToYearMonth',_this.year,_this.month)
 						}
 					}
-				},'今'):undefined,
+				},'今'):h(''),
 				this.getTitle
-			]):undefined,
+			]):h(''),
 			this.baseWeeks.map(item => {
 				return h('div',{
 					class:'p-week-list-item'
