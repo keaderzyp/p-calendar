@@ -13,6 +13,13 @@ const renderDateList = (h,_this) => {
 	let lastHeight = 0
 	let upDown = 'down'
 	let moved = false
+	let activeRow;
+	_this.getActiveMonth.data.find((item, index) => {
+		if(item.active){
+			activeRow = Math.floor(index/7)+1
+		}
+	})
+	console.log(activeRow)
 	return h('div',{
 		class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
 	},[
@@ -35,8 +42,10 @@ const renderDateList = (h,_this) => {
 					_this.getActiveSwipe(index);
 				}
 			}
-		},_this.allMonthArr.map(item => {
-			return h('van-swipe-item',{},
+		},_this.allMonthArr.map((item,index) => {
+			return h('van-swipe-item',{
+					ref:`swiper-item${index}`
+				},
 				[
 					h(PDateList,{
 						props:{
@@ -70,31 +79,53 @@ const renderDateList = (h,_this) => {
 				touchstart(e){
 					e.preventDefault()
 					let swiper = _this.$refs.swiper;
+					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
 					swiper.$el.style.transition = 'none'
+					swiperItem.$el.children[0].style.transition = 'none'
 					touch = true;
 				},
 				touchmove(e){
 					if(touch){
+						//设置手指滑动状态
 						moved = true
+						//获取swipe对象
 						let swiper = _this.$refs.swiper;
+						//获取swipe-item对象
+						let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+						//获取当前折叠的高度
 						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop - 20)
+						//判断滑动方向
 						if(e.changedTouches[0].pageY >lastHeight){
 							upDown = 'down'
 						}else{
 							upDown = 'up'
 						}
+						//换算当前swipe-item内部垂直便宜量
+						let itemCollapseHeight = (activeRow-1)*minHeight/maxHeight*(maxHeight-collapseHeight)*-1;
+						//设置拖滑状态中实时swipe的高度
 						swiper.$el.style.height = collapseHeight + 'px'
+						//设置拖滑状态中实时swipe-item内部垂直的便宜量
+						swiperItem.$el.children[0].style.marginTop = itemCollapseHeight+'px'
+						//判断swipe滑动临界点
 						if(collapseHeight<=minHeight ){
 							swiper.$el.style.height = minHeight+'px'
 						}else if (collapseHeight >=maxHeight){
 							swiper.$el.style.height = maxHeight+'px'
+						}
+						//判断swipe-item垂直偏移临界点
+						if(Math.abs(swiperItem.$el.children[0].offsetTop)>=minHeight*(activeRow-1)){
+							swiperItem.$el.children[0].style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
+						}else if(swiperItem.$el.children[0].offsetTop >=0){
+							swiperItem.$el.children[0].style.marginTop = '0px'
 						}
 						lastHeight = e.changedTouches[0].pageY
 					}
 				},
 				touchend(){
 					let swiper = _this.$refs.swiper;
-					swiper.$el.style.transition = '.5s'
+					swiper.$el.style.transition = '.3s'
+					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+					swiperItem.$el.children[0].style.transition = '.3s'
 					if(moved){
 						if(upDown == 'up'){
 							_this.renderCollapse = true
@@ -103,6 +134,11 @@ const renderDateList = (h,_this) => {
 						}
 					}else{
 						_this.renderCollapse = !_this.renderCollapse
+					}
+					if(_this.renderCollapse){
+						swiperItem.$el.children[0].style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
+					}else{
+						swiperItem.$el.children[0].style.marginTop = '0px'
 					}
 					touch = false
 					moved = false
@@ -221,6 +257,11 @@ export const PCalendar = {
 			this.initYearMonthDays(),
 			this.initYearMonthDays(now.getFullYear(),now.getMonth()+2)
 		]
+	},
+	computed:{
+		getActiveMonth(){
+			return this.allMonthArr[this.activeIndex]
+		}
 	},
 	methods:{
 		getMonthDays(year,month){
