@@ -19,7 +19,6 @@ const renderDateList = (h,_this) => {
 			activeRow = Math.floor(index/7)+1
 		}
 	})
-	console.log(activeRow)
 	return h('div',{
 		class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
 	},[
@@ -82,10 +81,18 @@ const renderDateList = (h,_this) => {
 					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
 					swiper.$el.style.transition = 'none'
 					swiperItem.$el.children[0].style.transition = 'none'
+					let item = swiperItem.$el.children[0];
+					item.children[item.children.length-1].style.transition = 'none'
 					touch = true;
 				},
 				touchmove(e){
 					if(touch){
+						//判断滑动方向
+						if(e.changedTouches[0].pageY >lastHeight){
+							upDown = 'down'
+						}else{
+							upDown = 'up'
+						}
 						//设置手指滑动状态
 						moved = true
 						//获取swipe对象
@@ -94,18 +101,14 @@ const renderDateList = (h,_this) => {
 						let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
 						//获取当前折叠的高度
 						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop - 20)
-						//判断滑动方向
-						if(e.changedTouches[0].pageY >lastHeight){
-							upDown = 'down'
-						}else{
-							upDown = 'up'
-						}
+						let item = swiperItem.$el.children[0];
+						item.children[item.children.length-1].style.opacity = collapseHeight/maxHeight
 						//换算当前swipe-item内部垂直便宜量
 						let itemCollapseHeight = (activeRow-1)*minHeight/maxHeight*(maxHeight-collapseHeight)*-1;
 						//设置拖滑状态中实时swipe的高度
 						swiper.$el.style.height = collapseHeight + 'px'
 						//设置拖滑状态中实时swipe-item内部垂直的便宜量
-						swiperItem.$el.children[0].style.marginTop = itemCollapseHeight+'px'
+						swiperItem.$el.children[0].style.marginTop = (itemCollapseHeight-20)+'px'
 						//判断swipe滑动临界点
 						if(collapseHeight<=minHeight ){
 							swiper.$el.style.height = minHeight+'px'
@@ -126,6 +129,9 @@ const renderDateList = (h,_this) => {
 					swiper.$el.style.transition = '.3s'
 					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
 					swiperItem.$el.children[0].style.transition = '.3s'
+					let item = swiperItem.$el.children[0];
+					item.children[item.children.length-1].style.transition = '.3s'
+					console.log(moved,upDown)
 					if(moved){
 						if(upDown == 'up'){
 							_this.renderCollapse = true
@@ -136,9 +142,13 @@ const renderDateList = (h,_this) => {
 						_this.renderCollapse = !_this.renderCollapse
 					}
 					if(_this.renderCollapse){
+						swiper.$el.style.height = (window.innerWidth/375*40) + 'px';
 						swiperItem.$el.children[0].style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
+						item.children[item.children.length-1].style.opacity = 0
 					}else{
+						swiper.$el.style.height = (window.innerWidth/375*240) + 'px';
 						swiperItem.$el.children[0].style.marginTop = '0px'
+						item.children[item.children.length-1].style.opacity = 1
 					}
 					touch = false
 					moved = false
@@ -236,9 +246,14 @@ export const PCalendar = {
 			this.renderCollapse = v
 		},
 		renderCollapse(v){
-			let swiper = this.$refs.swiper;
-			let height = (window.innerWidth/375*(v?40:240)) + 'px';
-			swiper.$el.style.height = height
+			// let swiper = this.$refs.swiper;
+			// this.$nextTick().then(()=>{
+				
+			// 	let height = (window.innerWidth/375*(v?40:240)) + 'px';
+			// 	console.log(height)
+			// 	swiper.$el.style.height = height
+			// })
+			
 		}
 	},
 	mounted(){
