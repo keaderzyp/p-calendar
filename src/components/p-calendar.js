@@ -79,6 +79,7 @@ const renderDateList = (h,_this) => {
 					// _this.activeIndex = index;
 					_this.syncPushDate(index);
 					_this.getActiveSwipe(index);
+					
 				}
 			}
 		},_this.allMonthArr.map((item,index) => {
@@ -95,6 +96,7 @@ const renderDateList = (h,_this) => {
 						on:{
 							//活动日期变更触发
 							activeChange(res){
+								console.log(res)
 								_this.$emit('activeChange',res)
 								_this.activeDate = res;
 								item.data.forEach( dateItem => {
@@ -248,6 +250,7 @@ export const PCalendar = {
 	watch:{
 		collapse(v){
 			this.renderCollapse = v
+			
 		},
 		renderCollapse(v){
 			// let swiper = this.$refs.swiper;
@@ -290,10 +293,43 @@ export const PCalendar = {
 		//获取当前选中的swipe
 		getActiveSwipe(index){
 			let monthObj = this.allMonthArr[index];
-			let activeObj = monthObj.data.filter(item => item.today||item.active)
-			this.$emit('change',{month:monthObj,activeDate:activeObj.length>0?activeObj[0]:this.activeDate})
-			this.$emit('activeChange',activeObj.length>0?activeObj[0]:this.activeDate)
-			this.activeDate = activeObj.length>0?activeObj[0]:this.activeDate
+			let activeObj = monthObj.data.filter(item => {
+				if(item.type == 'this'){
+					if(item.d == this.activeDate.d
+						&&item.w == this.activeDate.w 
+						&&item.dayCn == this.activeDate.dayCn){
+						return true
+					}
+					if(item.today||item.active){
+						return true
+					}
+				}
+				return false
+			})
+			if(activeObj.length==2){
+				this.activeDate = activeObj[1]
+			}else if(activeObj.length==1){
+				this.activeDate = activeObj[0]
+			}else{
+				this.activeDate = monthObj.data.filter(item => item.type=='this'&&item.d ==1)[0]
+			}
+			
+			// this.activeDate = activeObj[1]||
+			// let activeObj1 = activeObj.filter(item => item.type=="this"&&item.d == this.activeDate.d&&item.w == this.activeDate.w &&item.dayCn == this.activeDate.dayCn)
+			// if(activeObj1.length>0){
+			monthObj.data.forEach(item => {
+				item.active = false
+				if(item.type == 'this'){
+					if(item.d == this.activeDate.d&&item.w == this.activeDate.w &&item.dayCn == this.activeDate.dayCn){
+						item.active = true
+					}
+				}
+			})
+			// 	activeObj = activeObj1
+			// }
+			this.$emit('change',{month:monthObj,activeDate:this.activeDate})
+			this.$emit('activeChange',this.activeDate)
+			// this.activeDate = activeObj.length>0?activeObj[0]:this.activeDate
 		},
 		//初始化上月数据
 		initPreMonthDaysArr(year,month,monthDays,thisLastMonthArr){
