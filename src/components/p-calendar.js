@@ -4,7 +4,47 @@ import PDateList from './p-date-list'
 import PDateMonthList from './p-date-month-list'
 import PCollapseBar from './p-collapse-bar'
 import solarLunar from 'solarLunar';
-
+//折叠算法
+const computedCollapseData = (_this,swiper,collapseHeight,minHeight,maxHeight,activeRow) => {
+	//获取swipe对象
+	//获取swipe-item对象
+	let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+	//获取当前的swipe-item对象
+	let item = swiperItem.$el.children[0];
+	//设置实时的item大月份字体的透明度
+	item.children[item.children.length-1].style.opacity = collapseHeight/maxHeight
+	//换算当前swipe-item内部垂直偏移量
+	let itemCollapseHeight = ((maxHeight+minHeight)-collapseHeight)*(activeRow-1)*minHeight/maxHeight*-1;
+	//设置拖滑状态中实时swipe的高度
+	swiper.$el.style.height = collapseHeight + 'px'
+	//设置拖滑状态中实时swipe-item内部垂直的便宜量
+	item.style.marginTop = (itemCollapseHeight)+'px'
+	//判断swipe滑动临界点
+	if(collapseHeight<=minHeight ){
+		swiper.$el.style.height = minHeight+'px'
+		item.style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
+		item.children[item.children.length-1].style.opacity = 0
+	}else if (collapseHeight >=maxHeight){
+		swiper.$el.style.height = maxHeight+'px'
+		item.style.marginTop = '0px'
+		item.children[item.children.length-1].style.opacity = 1
+	}
+}
+//设置折叠过度开关
+const setCollapseTransition = (_this,flag) => {
+	let swiper = _this.$refs.swiper;
+	let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+	let item = swiperItem.$el.children[0];
+	if(flag){
+		swiper.$el.style.transition = '.3s'
+		swiperItem.$el.children[0].style.transition = '.3s'
+		item.children[item.children.length-1].style.transition = '.3s'
+	}else{
+		swiper.$el.style.transition = 'none'
+		swiperItem.$el.children[0].style.transition = 'none'
+		item.children[item.children.length-1].style.transition = 'none'
+	}
+}
 //渲染type为date｜list类型的数据
 const renderDateList = (h,_this) => {
 	let touch = false;
@@ -77,12 +117,7 @@ const renderDateList = (h,_this) => {
 			on:{
 				touchstart(e){
 					e.preventDefault()
-					let swiper = _this.$refs.swiper;
-					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
-					swiper.$el.style.transition = 'none'
-					swiperItem.$el.children[0].style.transition = 'none'
-					let item = swiperItem.$el.children[0];
-					item.children[item.children.length-1].style.transition = 'none'
+					setCollapseTransition(_this,false)
 					touch = true;
 				},
 				touchmove(e){
@@ -95,43 +130,16 @@ const renderDateList = (h,_this) => {
 						}
 						//设置手指滑动状态
 						moved = true
-						//获取swipe对象
-						let swiper = _this.$refs.swiper;
-						//获取swipe-item对象
-						let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+						let swiper = _this.$refs.swiper
 						//获取当前折叠的高度
-						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop - 20)
-						let item = swiperItem.$el.children[0];
-						item.children[item.children.length-1].style.opacity = collapseHeight/maxHeight
-						//换算当前swipe-item内部垂直便宜量
-						let itemCollapseHeight = (activeRow-1)*minHeight/maxHeight*(maxHeight-collapseHeight)*-1;
-						//设置拖滑状态中实时swipe的高度
-						swiper.$el.style.height = collapseHeight + 'px'
-						//设置拖滑状态中实时swipe-item内部垂直的便宜量
-						swiperItem.$el.children[0].style.marginTop = (itemCollapseHeight-20)+'px'
-						//判断swipe滑动临界点
-						if(collapseHeight<=minHeight ){
-							swiper.$el.style.height = minHeight+'px'
-						}else if (collapseHeight >=maxHeight){
-							swiper.$el.style.height = maxHeight+'px'
-						}
-						//判断swipe-item垂直偏移临界点
-						if(Math.abs(swiperItem.$el.children[0].offsetTop)>=minHeight*(activeRow-1)){
-							swiperItem.$el.children[0].style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
-						}else if(swiperItem.$el.children[0].offsetTop >=0){
-							swiperItem.$el.children[0].style.marginTop = '0px'
-						}
+						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop)
+						computedCollapseData(_this,swiper,collapseHeight,minHeight,maxHeight,activeRow)
 						lastHeight = e.changedTouches[0].pageY
 					}
 				},
 				touchend(){
+					setCollapseTransition(_this,true)
 					let swiper = _this.$refs.swiper;
-					swiper.$el.style.transition = '.3s'
-					let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
-					swiperItem.$el.children[0].style.transition = '.3s'
-					let item = swiperItem.$el.children[0];
-					item.children[item.children.length-1].style.transition = '.3s'
-					console.log(moved,upDown)
 					if(moved){
 						if(upDown == 'up'){
 							_this.renderCollapse = true
@@ -142,13 +150,9 @@ const renderDateList = (h,_this) => {
 						_this.renderCollapse = !_this.renderCollapse
 					}
 					if(_this.renderCollapse){
-						swiper.$el.style.height = (window.innerWidth/375*40) + 'px';
-						swiperItem.$el.children[0].style.marginTop = (minHeight*(activeRow-1)*-1) + 'px'
-						item.children[item.children.length-1].style.opacity = 0
+						computedCollapseData(_this,swiper,minHeight,minHeight,maxHeight,activeRow)
 					}else{
-						swiper.$el.style.height = (window.innerWidth/375*240) + 'px';
-						swiperItem.$el.children[0].style.marginTop = '0px'
-						item.children[item.children.length-1].style.opacity = 1
+						computedCollapseData(_this,swiper,maxHeight,minHeight,maxHeight,activeRow)
 					}
 					touch = false
 					moved = false
