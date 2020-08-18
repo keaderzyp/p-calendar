@@ -50,14 +50,16 @@ const setActiveDateItem = (_this,index,t) => {
 	let thisMonth = _this.allMonthArr[index]
 	thisMonth.data.forEach(item => {
 		item.active = false;
-		if(item.type == 'this'){
-			if(item.date.cYear == t.cYear
-			&&item.date.cMonth == t.cMonth 
-			&&item.date.cDay == t.cDay){
-				item.active = true
-			}
+		// if(item.type == 'this'){
+		if(item.date.cYear == t.date.cYear
+		&&item.date.cMonth == t.date.cMonth 
+		&&item.date.cDay == t.date.cDay){
+			item.active = true
 		}
+		// }
 	})
+	_this.activeIndex = index;
+	_this.activeDate = t
 }
 //渲染type为date｜list类型的数据
 const renderDateList = (h,_this) => {
@@ -112,14 +114,7 @@ const renderDateList = (h,_this) => {
 								//活动日期变更触发
 								activeChange(res){
 									_this.$emit('activeChange',res)
-									_this.activeDate = res;
-									item.data.forEach( dateItem => {
-										if(dateItem.d == res.d && dateItem.w == res.w){
-											dateItem.active = true;
-										}else{
-											dateItem.active = false
-										}
-									})
+									setActiveDateItem(_this,_this.activeIndex,res)
 								}
 							}
 						}),
@@ -188,10 +183,10 @@ const renderDateList = (h,_this) => {
 					on:{
 						click(){
 							let setActive = true
-							let t = _this.today.date
-							let d = _this.activeDate.date
-							_this.swipeToYearMonth(t.cYear,t.cMonth)
-							if(t.cYear == d.cYear&&t.cMonth == d.cMonth){
+							let t = _this.today
+							let d = _this.activeDate
+							_this.swipeToYearMonth(t.date.cYear,t.date.cMonth)
+							if(t.date.cYear == d.date.cYear&&t.date.cMonth == d.date.cMonth){
 								setActiveDateItem(_this,_this.activeIndex,t)
 							}else{
 								_this.$refs.swiper.$on('change',function(index){
