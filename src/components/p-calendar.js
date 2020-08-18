@@ -45,6 +45,20 @@ const setCollapseTransition = (_this,flag) => {
 		item.children[item.children.length-1].style.transition = 'none'
 	}
 }
+//设置当前激活的日期
+const setActiveDateItem = (_this,index,t) => {
+	let thisMonth = _this.allMonthArr[index]
+	thisMonth.data.forEach(item => {
+		item.active = false;
+		if(item.type == 'this'){
+			if(item.date.cYear == t.cYear
+			&&item.date.cMonth == t.cMonth 
+			&&item.date.cDay == t.cDay){
+				item.active = true
+			}
+		}
+	})
+}
 //渲染type为date｜list类型的数据
 const renderDateList = (h,_this) => {
 	let touch = false;
@@ -59,109 +73,141 @@ const renderDateList = (h,_this) => {
 			activeRow = Math.floor(index/7)+1
 		}
 	})
-	return h('div',{
-		class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
-	},[
-		h(PWeekList,{
-			props:{
-				'base-weeks':_this.baseWeeks
-			}
-		}),
-		h('van-swipe',{
-			props:{
-				'show-indicators':false,
-				loop:false,
-				'initial-swipe':_this.activeIndex
-			},
-			ref:'swiper',
-			on:{
-				change(index){
-					// _this.activeIndex = index;
-					_this.syncPushDate(index);
-					_this.getActiveSwipe(index);
-					
+	return [
+		h('div',{
+			class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
+		},[
+			h(PWeekList,{
+				props:{
+					'base-weeks':_this.baseWeeks
 				}
-			}
-		},_this.allMonthArr.map((item,index) => {
-			return h('van-swipe-item',{
-					ref:`swiper-item${index}`
+			}),
+			h('van-swipe',{
+				props:{
+					'show-indicators':false,
+					loop:false,
+					'initial-swipe':_this.activeIndex
 				},
-				[
-					h(PDateList,{
-						props:{
-							data:item.data,
-							month:item.m,
-							year:item.y
-						},
-						on:{
-							//活动日期变更触发
-							activeChange(res){
-								console.log(res)
-								_this.$emit('activeChange',res)
-								_this.activeDate = res;
-								item.data.forEach( dateItem => {
-									if(dateItem.d == res.d && dateItem.w == res.w){
-										dateItem.active = true;
-									}else{
-										dateItem.active = false
+				ref:'swiper',
+				on:{
+					change(index){
+						// _this.activeIndex = index;
+						_this.syncPushDate(index);
+						_this.getActiveSwipe(index);
+						
+					}
+				}
+			},_this.allMonthArr.map((item,index) => {
+				return h('van-swipe-item',{
+						ref:`swiper-item${index}`
+					},
+					[
+						h(PDateList,{
+							props:{
+								data:item.data,
+								month:item.m,
+								year:item.y
+							},
+							on:{
+								//活动日期变更触发
+								activeChange(res){
+									_this.$emit('activeChange',res)
+									_this.activeDate = res;
+									item.data.forEach( dateItem => {
+										if(dateItem.d == res.d && dateItem.w == res.w){
+											dateItem.active = true;
+										}else{
+											dateItem.active = false
+										}
+									})
+								}
+							}
+						}),
+					])
+				}
+			)),
+			h(PCollapseBar,{
+				props:{
+					collapse:_this.renderCollapse
+				},
+				on:{
+					touchstart(e){
+						e.preventDefault()
+						setCollapseTransition(_this,false)
+						touch = true;
+					},
+					touchmove(e){
+						if(touch){
+							//判断滑动方向
+							if(e.changedTouches[0].pageY >lastHeight){
+								upDown = 'down'
+							}else{
+								upDown = 'up'
+							}
+							//设置手指滑动状态
+							moved = true
+							let swiper = _this.$refs.swiper
+							//获取当前折叠的高度
+							let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop)
+							computedCollapseData(_this,swiper,collapseHeight,minHeight,maxHeight,activeRow)
+							lastHeight = e.changedTouches[0].pageY
+						}
+					},
+					touchend(){
+						setCollapseTransition(_this,true)
+						let swiper = _this.$refs.swiper;
+						if(moved){
+							if(upDown == 'up'){
+								_this.renderCollapse = true
+							}else{
+								_this.renderCollapse = false
+							}
+						}else{
+							_this.renderCollapse = !_this.renderCollapse
+						}
+						if(_this.renderCollapse){
+							computedCollapseData(_this,swiper,minHeight,minHeight,maxHeight,activeRow)
+						}else{
+							computedCollapseData(_this,swiper,maxHeight,minHeight,maxHeight,activeRow)
+						}
+						touch = false
+						moved = false
+					}
+				}
+			})
+		]),
+		h('div',{
+			class:`p-date-list-action-container`
+		},[
+			h('div',{
+				class:`p-date-list-month-title`
+			},[
+				!_this.isThisDay?
+				h('div',{
+					class:'this-month',
+					on:{
+						click(){
+							let setActive = true
+							let t = _this.today.date
+							let d = _this.activeDate.date
+							_this.swipeToYearMonth(t.cYear,t.cMonth)
+							if(t.cYear == d.cYear&&t.cMonth == d.cMonth){
+								setActiveDateItem(_this,_this.activeIndex,t)
+							}else{
+								_this.$refs.swiper.$on('change',function(index){
+									if(setActive){
+										setActiveDateItem(_this,index,t)
+										setActive = false
 									}
 								})
 							}
 						}
-					}),
-				])
-			}
-		)),
-		h(PCollapseBar,{
-			props:{
-				collapse:_this.renderCollapse
-			},
-			on:{
-				touchstart(e){
-					e.preventDefault()
-					setCollapseTransition(_this,false)
-					touch = true;
-				},
-				touchmove(e){
-					if(touch){
-						//判断滑动方向
-						if(e.changedTouches[0].pageY >lastHeight){
-							upDown = 'down'
-						}else{
-							upDown = 'up'
-						}
-						//设置手指滑动状态
-						moved = true
-						let swiper = _this.$refs.swiper
-						//获取当前折叠的高度
-						let collapseHeight = Math.floor(e.changedTouches[0].pageY - swiper.$el.offsetTop)
-						computedCollapseData(_this,swiper,collapseHeight,minHeight,maxHeight,activeRow)
-						lastHeight = e.changedTouches[0].pageY
 					}
-				},
-				touchend(){
-					setCollapseTransition(_this,true)
-					let swiper = _this.$refs.swiper;
-					if(moved){
-						if(upDown == 'up'){
-							_this.renderCollapse = true
-						}else{
-							_this.renderCollapse = false
-						}
-					}else{
-						_this.renderCollapse = !_this.renderCollapse
-					}
-					if(_this.renderCollapse){
-						computedCollapseData(_this,swiper,minHeight,minHeight,maxHeight,activeRow)
-					}else{
-						computedCollapseData(_this,swiper,maxHeight,minHeight,maxHeight,activeRow)
-					}
-					touch = false
-					moved = false
-				}
-			}
-		})
-	])
+				},'今'):h(''),
+				_this.getActiveMonthData
+			])
+		])
+	]
 }
 //渲染type为month的数据
 const renderMonthList = (h,_this) => {
@@ -244,7 +290,8 @@ export const PCalendar = {
 			activeIndex:5,
 			allMonthArr:[],
 			activeDate:{},
-			renderCollapse:false
+			renderCollapse:false,
+			today:{}
 		}
 	},
 	watch:{
@@ -283,13 +330,28 @@ export const PCalendar = {
 	computed:{
 		getActiveMonth(){
 			return this.allMonthArr[this.activeIndex]
-		}
+		},
+		getActiveMonthData(){
+			return `${this.activeDate.date.cMonth}月${this.activeDate.date.cDay}日 ${this.activeDate.date.ncWeek}`	
+		},
+		isThisDay(){
+			let d = this.activeDate.date;
+			let t = this.today.date;
+			if(d.cYear == t.cYear
+			&&d.cMonth == t.cMonth
+			&&d.cDay == t.cDay){
+				return true
+			}else{
+				return false
+			}
+		},
 	},
 	methods:{
 		getMonthDays(year,month){
 			let d = new Date(year,month,0)
 			return d.getDate();
 		},
+		
 		//获取当前选中的swipe
 		getActiveSwipe(index){
 			let monthObj = this.allMonthArr[index];
@@ -370,7 +432,15 @@ export const PCalendar = {
 							active,
 							today
 						};
-						
+						this.today = {
+							w:dateItem.nWeek,
+							d:dateItem.cDay,
+							date:dateItem,
+							dayCn:dateItem.dayCn,
+							type:'this',
+							active,
+							today
+						}
 					}else{
 						today = false;
 						active = false;
