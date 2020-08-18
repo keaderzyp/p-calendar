@@ -5,10 +5,10 @@ import PDateMonthList from './p-date-month-list'
 import PCollapseBar from './p-collapse-bar'
 import solarLunar from 'solarLunar';
 //折叠算法
-const computedCollapseData = (_this,swiper,collapseHeight,minHeight,maxHeight,activeRow) => {
+const computedCollapseData = (_this,swiper,collapseHeight,minHeight,maxHeight,activeRow,i) => {
 	//获取swipe对象
 	//获取swipe-item对象
-	let swiperItem = _this.$refs[`swiper-item${_this.activeIndex}`]
+	let swiperItem = _this.$refs[`swiper-item${i?i:_this.activeIndex}`]
 	//获取当前的swipe-item对象
 	let item = swiperItem.$el.children[0];
 	//设置实时的item大月份字体的透明度
@@ -96,7 +96,7 @@ const renderDateList = (h,_this) => {
 						// _this.activeIndex = index;
 						_this.syncPushDate(index);
 						_this.getActiveSwipe(index);
-						
+						setCollapseAnimate.call(_this,index)
 					}
 				}
 			},_this.allMonthArr.map((item,index) => {
@@ -149,8 +149,6 @@ const renderDateList = (h,_this) => {
 						}
 					},
 					touchend(){
-						setCollapseTransition(_this,true)
-						let swiper = _this.$refs.swiper;
 						if(moved){
 							if(upDown == 'up'){
 								_this.renderCollapse = true
@@ -159,11 +157,6 @@ const renderDateList = (h,_this) => {
 							}
 						}else{
 							_this.renderCollapse = !_this.renderCollapse
-						}
-						if(_this.renderCollapse){
-							computedCollapseData(_this,swiper,minHeight,minHeight,maxHeight,activeRow)
-						}else{
-							computedCollapseData(_this,swiper,maxHeight,minHeight,maxHeight,activeRow)
 						}
 						touch = false
 						moved = false
@@ -203,6 +196,22 @@ const renderDateList = (h,_this) => {
 			])
 		])
 	]
+}
+const setCollapseAnimate = function(i){
+	let swiper = this.$refs.swiper;
+	let minHeight = window.innerWidth/375*40;
+	let maxHeight = window.innerWidth/375*240;
+	let activeRow;
+	this.allMonthArr[i?i:this.activeIndex].data.find((item, index) => {
+		if(item.active){
+			activeRow = Math.floor(index/7)+1
+		}
+	})
+	if(this.renderCollapse){
+		computedCollapseData(this,swiper,minHeight,minHeight,maxHeight,activeRow,i)
+	}else{
+		computedCollapseData(this,swiper,maxHeight,minHeight,maxHeight,activeRow,i)
+	}
 }
 //渲染type为month的数据
 const renderMonthList = (h,_this) => {
@@ -292,23 +301,17 @@ export const PCalendar = {
 	watch:{
 		collapse(v){
 			this.renderCollapse = v
-			
 		},
 		renderCollapse(v){
-			// let swiper = this.$refs.swiper;
-			// this.$nextTick().then(()=>{
-				
-			// 	let height = (window.innerWidth/375*(v?40:240)) + 'px';
-			// 	console.log(height)
-			// 	swiper.$el.style.height = height
-			// })
-			
+			setCollapseTransition(this,true)
+			setCollapseAnimate.call(this)
 		}
 	},
 	mounted(){
 		let html = document.querySelector('html');
 		html.style.fontSize = (window.innerWidth/375)+'px'
-		
+		this.renderCollapse = this.collapse;
+		setCollapseAnimate.call(this)
 	},
 	created(){
 		let now = new Date();
@@ -370,7 +373,6 @@ export const PCalendar = {
 			}else{
 				this.activeDate = monthObj.data.filter(item => item.type=='this'&&item.d ==1)[0]
 			}
-			
 			// this.activeDate = activeObj[1]||
 			// let activeObj1 = activeObj.filter(item => item.type=="this"&&item.d == this.activeDate.d&&item.w == this.activeDate.w &&item.dayCn == this.activeDate.dayCn)
 			// if(activeObj1.length>0){
