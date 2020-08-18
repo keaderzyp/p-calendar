@@ -77,7 +77,7 @@ const renderDateList = (h,_this) => {
 	})
 	return [
 		h('div',{
-			class:`p-date-list ${_this.renderCollapse?'collapse':'not-collapse'}`
+			class:`p-date-list-container ${_this.renderCollapse?'collapse':'not-collapse'}`
 		},[
 			h(PWeekList,{
 				props:{
@@ -207,7 +207,7 @@ const renderDateList = (h,_this) => {
 //渲染type为month的数据
 const renderMonthList = (h,_this) => {
 	return h('div',{
-		class:'p-month-list'
+		class:'p-month-list-container'
 	},[
 		h(PWeekList,{
 			props:{
