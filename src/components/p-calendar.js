@@ -504,32 +504,36 @@ export const PCalendar = {
 				let y = this.allMonthArr[0].y;
 				let count = 12;
 				let arr = [];
-				while(count>0){
-					if(m == 1){
-						m = 12
-						y--
-					}else{
-						m--;
+				if(y>=1900){
+					while(count>0){
+						if(m == 1){
+							m = 12
+							y--
+						}else{
+							m--;
+						}
+						arr.unshift(this.initYearMonthDays(y,m))
+						count--
 					}
-					arr.unshift(this.initYearMonthDays(y,m))
-					count--
+					this.allMonthArr = [...arr,...this.allMonthArr]
+					this.activeIndex = index+12
 				}
-				this.allMonthArr = [...arr,...this.allMonthArr]
-				this.activeIndex = index+12
 			}else if(index == this.allMonthArr.length - 1){
 				let m = this.allMonthArr[index].m;
 				let y = this.allMonthArr[index].y;
-				if(m == 12){
-					m = 1
-					y++
-				}else{
-					m++;
+				if(y<=2100){
+					if(m == 12){
+						m = 1
+						y++
+					}else{
+						m++;
+					}
+					let nextMonthArr = this.initYearMonthDays(y,m)
+					this.$nextTick().then(() => {
+						this.allMonthArr = [...this.allMonthArr,nextMonthArr]
+						this.activeIndex = index
+					})
 				}
-				let nextMonthArr = this.initYearMonthDays(y,m)
-				this.$nextTick().then(() => {
-					this.allMonthArr = [...this.allMonthArr,nextMonthArr]
-					this.activeIndex = index
-				})
 			}else{
 				this.$nextTick().then(() => {
 					this.activeIndex = index
@@ -548,6 +552,12 @@ export const PCalendar = {
 		},
 		//滚动到指定年月
 		swipeToYearMonth(year,month){
+			if(year<=1900){
+				year = 1900
+			}
+			if(year>=2100){
+				year = 2100
+			}
 			let nowLastMonth = this.allMonthArr[this.allMonthArr.length-1];
 			let nowFirstMonth = this.allMonthArr[0];
 			let thisFirstMonth = nowFirstMonth.m;
